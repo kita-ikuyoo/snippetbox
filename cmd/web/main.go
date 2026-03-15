@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"flag"
 	_ "github.com/go-sql-driver/mysql"
+	"html/template"
 	"log/slog"
 	"net/http"
 	"os"
@@ -12,8 +13,9 @@ import (
 )
 
 type application struct {
-	logger   *slog.Logger
-	snippets *models.SnippetModel
+	logger        *slog.Logger
+	snippets      *models.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -30,10 +32,15 @@ func main() {
 	}
 	defer db.Close()
 	// AddSource adds the source of error into output log
-
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		logger.Error(err.Error(), slog.String("trace", string(debug.Stack())))
+		os.Exit(1)
+	}
 	app := &application{
-		logger:   logger,
-		snippets: &models.SnippetModel{DB: db},
+		logger:        logger,
+		snippets:      &models.SnippetModel{DB: db},
+		templateCache: templateCache,
 	}
 	// http.Dir is FileSystem interface: Open(name string) (File, error)
 	// http.FileServer returns handler, a interface: ServeHTTP(ResponseWriter, *Request)
@@ -42,9 +49,8 @@ func main() {
 	// the file server would look for it at ./ui/static/static/css/main.css —
 	// the /static/ part gets duplicated.
 
-	mux := app.routes()
 	app.logger.Info("starting server on", slog.String("port", *port))
-	err = http.ListenAndServe(":"+*port, mux)
+	err = http.ListenAndServe(":"+*port, app.routes())
 	app.logger.Error(err.Error(), slog.String("trace", string(debug.Stack())))
 	os.Exit(1)
 }
