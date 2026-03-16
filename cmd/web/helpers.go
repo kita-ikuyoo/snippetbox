@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"runtime/debug"
+	"time"
 )
 
 // The serverError helper writes a log entry at Error level (including the request
@@ -49,4 +50,10 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 	}
 	w.WriteHeader(status)
 	buf.WriteTo(w)
+}
+
+func (app *application) newTemplateData() templateData {
+	return templateData{
+		CurrentYear: time.Now().Year(),
+	}
 }
