@@ -2,7 +2,10 @@ package main
 
 import (
 	"database/sql"
+	"encoding/gob"
 	"flag"
+	"github.com/alexedwards/scs/v2"
+	"github.com/alexedwards/scs/v2/memstore"
 	_ "github.com/go-sql-driver/mysql"
 	"html/template"
 	"log/slog"
@@ -13,9 +16,10 @@ import (
 )
 
 type application struct {
-	logger        *slog.Logger
-	snippets      *models.SnippetModel
-	templateCache map[string]*template.Template
+	logger         *slog.Logger
+	snippets       *models.SnippetModel
+	templateCache  map[string]*template.Template
+	sessionManager *scs.SessionManager
 }
 
 func main() {
@@ -37,11 +41,17 @@ func main() {
 		logger.Error(err.Error(), slog.String("trace", string(debug.Stack())))
 		os.Exit(1)
 	}
+
+	sessionManager := scs.New()
+	sessionManager.Store = memstore.New()
+
 	app := &application{
-		logger:        logger,
-		snippets:      &models.SnippetModel{DB: db},
-		templateCache: templateCache,
+		logger:         logger,
+		snippets:       &models.SnippetModel{DB: db},
+		templateCache:  templateCache,
+		sessionManager: sessionManager,
 	}
+	gob.Register(snippetCreateForm{})
 	// http.Dir is FileSystem interface: Open(name string) (File, error)
 	// http.FileServer returns handler, a interface: ServeHTTP(ResponseWriter, *Request)
 	// log.Printf("%T\n", fileServer)
