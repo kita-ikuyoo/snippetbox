@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"snippetbox/internal/models"
 	"strconv"
+	"strings"
+	"unicode/utf8"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -48,7 +50,7 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	// to the r.PostForm map. This also works in the same way for PUT and PATCH
 	// requests. If there are any errors, we use our app.ClientError() helper to
 	// send a 400 Bad Request response to the user.
-	r.Body = http.MaxBytesReader(w, r.Body, 1)
+	r.Body = http.MaxBytesReader(w, r.Body, 4096)
 	err := r.ParseForm()
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
@@ -65,15 +67,30 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	// Request response if the conversion fails.
 	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
 
-	// Problem with PostForm.Get(): PostForm has the underlying type map[string][]string and Get() only return the first element in the slice.
-	// In some cases, there will be multiple values in a form element, and to get all of them you can loop over the underlying map
-	r.Body = http.MaxBytesReader(w, r.Body, 4096)
-	if err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
+	// Initialize a map to hold any validation errors for the form fields.
+	fieldErrors := make(map[string]string)
+	// Check that the title value is not blank and is not more than 100
+	// characters long. If it fails either of those checks, add a message to the
+	// errors map using the field name as the key.
+	if strings.TrimSpace(title) == "" {
+		fieldErrors["title"] = "This field cannot be blank"
+	} else if utf8.RuneCountInString(title) > 100 {
+		// len() counts bytes. If you input "世界", it contains 3 bytes.
+		fieldErrors["title"] = "This field cannot be more than 100 characters long"
 	}
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
+	// Check that the content value isn't blank.
+	if strings.TrimSpace(content) == "" {
+		fieldErrors["content"] = "This field cannot be blank"
+	}
+	// Check the expires value matches one of the permitted values (1, 7 or
+	// 365).
+	if expires != 1 && expires != 7 && expires != 365 {
+		fieldErrors["expires"] = "This field must equal 1, 7 or 365"
+	}
+	// If there are any errors, dump them in a plain-text HTTP response and
+	// return from the handler.
+	if len(fieldErrors) > 0 {
+		fmt.Fprint(w, fieldErrors)
 		return
 	}
 	id, err := app.snippets.Insert(title, content, expires)
