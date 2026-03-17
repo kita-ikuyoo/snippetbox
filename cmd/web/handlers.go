@@ -51,15 +51,12 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 
 	data := app.newTemplateData()
 	// Initialize data.Form to avoid nil when sending GET /snippet/create
-	//if form, ok := app.sessionManager.Pop(r.Context(), "form").(snippetCreateForm); ok {
-	//	data.Form = form
-	//} else {
-	//	data.Form = snippetCreateForm{
-	//		Expires: 365,
-	//	}
-	//}
-	data.Form = snippetCreateForm{
-		Expires: 365,
+	if form, ok := app.sessionManager.Pop(r.Context(), "form").(snippetCreateForm); ok {
+		data.Form = form
+	} else {
+		data.Form = snippetCreateForm{
+			Expires: 365,
+		}
 	}
 	app.render(w, r, http.StatusOK, "create.html", data)
 }
@@ -103,11 +100,8 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	// If there are any errors, dump them in a plain-text HTTP response and
 	// return from the handler.
 	if !form.Valid() {
-		//app.sessionManager.Put(r.Context(), "form", form)
-		//http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
-		data := app.newTemplateData()
-		data.Form = form
-		app.render(w, r, http.StatusUnprocessableEntity, "create.html", data)
+		app.sessionManager.Put(r.Context(), "form", form)
+		http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
 		return
 	}
 	id, err := app.snippets.Insert(form.Title, form.Content, expires)
