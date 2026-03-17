@@ -48,7 +48,12 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, http.StatusOK, "view.html", data)
 }
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
+
 	data := app.newTemplateData()
+	// Initialize data.Form to avoid nil when sending GET /snippet/create
+	data.Form = snippetCreateForm{
+		Expires: 365,
+	}
 	app.render(w, r, http.StatusOK, "create.html", data)
 }
 
@@ -81,30 +86,32 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		FieldErrors: map[string]string{},
 	}
 	// Initialize a map to hold any validation errors for the form fields.
-	fieldErrors := make(map[string]string)
+	form.FieldErrors = make(map[string]string)
 	// Check that the title value is not blank and is not more than 100
 	// characters long. If it fails either of those checks, add a message to the
 	// errors map using the field name as the key.
 	if strings.TrimSpace(form.Title) == "" {
-		fieldErrors["title"] = "This field cannot be blank"
+		form.FieldErrors["title"] = "This field cannot be blank"
 	} else if utf8.RuneCountInString(form.Title) > 100 {
 		// len() counts bytes. If you input "世界", it contains 3 bytes.
-		fieldErrors["title"] = "This field cannot be more than 100 characters long"
+		form.FieldErrors["title"] = "This field cannot be more than 100 characters long"
 	}
 	// Check that the content value isn't blank.
 	if strings.TrimSpace(form.Content) == "" {
-		fieldErrors["content"] = "This field cannot be blank"
+		//log.Print("herer")
+		form.FieldErrors["content"] = "This field cannot be blank"
 	}
 	// Check the expires value matches one of the permitted values (1, 7 or
 	// 365).
 	if expires != 1 && expires != 7 && expires != 365 {
-		fieldErrors["expires"] = "This field must equal 1, 7 or 365"
+		form.FieldErrors["expires"] = "This field must equal 1, 7 or 365"
 	}
 	// If there are any errors, dump them in a plain-text HTTP response and
 	// return from the handler.
-	if len(fieldErrors) > 0 {
+	if len(form.FieldErrors) > 0 {
 		data := app.newTemplateData()
 		data.Form = form
+		//log.Print(data.Form.(snippetCreateForm).FieldErrors)
 		app.render(w, r, http.StatusUnprocessableEntity, "create.html", data)
 		return
 	}
