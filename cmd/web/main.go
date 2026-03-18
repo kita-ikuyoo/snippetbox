@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"encoding/gob"
 	"flag"
@@ -60,6 +61,11 @@ func main() {
 		sessionManager: sessionManager,
 		formDecoder:    formDecoder,
 	}
+
+	tlsConfig := &tls.Config{
+		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+	}
+
 	gob.Register(snippetCreateForm{})
 	// http.Dir is FileSystem interface: Open(name string) (File, error)
 	// http.FileServer returns handler, a interface: ServeHTTP(ResponseWriter, *Request)
@@ -73,7 +79,8 @@ func main() {
 		// http.ServerのErrorLogは*log.Logger
 		// しかし、logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{AddSource: true}))は*log/slog.logger
 		// slog.NewLogLogger の第二引数に渡すことで、「このロガーが出力するログを Error レベルとして扱う」という意味になります。
-		ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelError),
+		ErrorLog:  slog.NewLogLogger(logger.Handler(), slog.LevelError),
+		TLSConfig: tlsConfig,
 	}
 	app.logger.Info("starting server on", slog.String("port", *port))
 	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
