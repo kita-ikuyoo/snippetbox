@@ -27,7 +27,7 @@ type application struct {
 }
 
 func main() {
-	port := flag.String("port", "4000", "HTTP network port")
+	port := flag.String("port", "443", "HTTP network port")
 	// parseTime=true tells the driver to convert time type to golang's time.Time
 	dsn := flag.String("dsn", "web:web@/snippetbox?parseTime=true&loc=Asia%2FTokyo", "MySQL data source name")
 	flag.Parse()
