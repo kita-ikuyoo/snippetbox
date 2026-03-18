@@ -66,9 +66,12 @@ func main() {
 	// When a request comes in for /static/css/main.css,
 	// the file server would look for it at ./ui/static/static/css/main.css —
 	// the /static/ part gets duplicated.
-
+	srv := http.Server{
+		Addr:    ":" + *port,
+		Handler: app.routes(),
+	}
 	app.logger.Info("starting server on", slog.String("port", *port))
-	err = http.ListenAndServe(":"+*port, app.routes())
+	err = srv.ListenAndServe()
 	app.logger.Error(err.Error(), slog.String("trace", string(debug.Stack())))
 	os.Exit(1)
 }
