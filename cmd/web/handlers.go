@@ -23,7 +23,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, r, err)
 		return
 	}
-	data := app.newTemplateData()
+	data := app.newTemplateData(r)
 	data.Snippets = snippets
 	app.render(w, r, http.StatusOK, "home.html", data)
 }
@@ -43,13 +43,16 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	data := app.newTemplateData()
+	// PopString() also deletes the key and value from the session data, so it
+	// behaves like a one-time fetch. If there is no matching key in the session
+	// data this will return the empty string.
+	data := app.newTemplateData(r)
 	data.Snippet = snippet
 	app.render(w, r, http.StatusOK, "view.html", data)
 }
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 
-	data := app.newTemplateData()
+	data := app.newTemplateData(r)
 	// Initialize data.Form to avoid nil when sending GET /snippet/create
 	if form, ok := app.sessionManager.Pop(r.Context(), "form").(snippetCreateForm); ok {
 		data.Form = form
@@ -87,5 +90,6 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		app.serverError(w, r, err)
 		return
 	}
+	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }

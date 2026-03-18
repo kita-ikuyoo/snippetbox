@@ -5,7 +5,8 @@ import (
 	"encoding/gob"
 	"flag"
 	"github.com/alexedwards/scs/v2"
-	"github.com/alexedwards/scs/v2/memstore"
+
+	"github.com/alexedwards/scs/mysqlstore"
 	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"html/template"
@@ -14,6 +15,7 @@ import (
 	"os"
 	"runtime/debug"
 	"snippetbox/internal/models"
+	"time"
 )
 
 type application struct {
@@ -27,7 +29,7 @@ type application struct {
 func main() {
 	port := flag.String("port", "4000", "HTTP network port")
 	// parseTime=true tells the driver to convert time type to golang's time.Time
-	dsn := flag.String("dsn", "web:web@/snippetbox?parseTime=true", "MySQL data source name")
+	dsn := flag.String("dsn", "web:web@/snippetbox?parseTime=true&loc=Asia%2FTokyo", "MySQL data source name")
 	flag.Parse()
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{AddSource: true}))
@@ -45,7 +47,8 @@ func main() {
 	}
 
 	sessionManager := scs.New()
-	sessionManager.Store = memstore.New()
+	sessionManager.Store = mysqlstore.New(db)
+	sessionManager.Lifetime = 12 * time.Hour
 
 	formDecoder := form.NewDecoder()
 
