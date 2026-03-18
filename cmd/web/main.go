@@ -25,6 +25,7 @@ type application struct {
 	templateCache  map[string]*template.Template
 	sessionManager *scs.SessionManager
 	formDecoder    *form.Decoder
+	users          *models.UserModel
 }
 
 func main() {
@@ -67,6 +68,7 @@ func main() {
 	}
 
 	gob.Register(snippetCreateForm{})
+	gob.Register(userSignupForm{})
 	// http.Dir is FileSystem interface: Open(name string) (File, error)
 	// http.FileServer returns handler, a interface: ServeHTTP(ResponseWriter, *Request)
 	// log.Printf("%T\n", fileServer)
