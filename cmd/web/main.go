@@ -84,7 +84,7 @@ func main() {
 		// keep-alive will be closed after 1 minute
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,git
+		WriteTimeout: 10 * time.Second,
 	}
 	app.logger.Info("starting server on", slog.String("port", *port))
 	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
