@@ -81,6 +81,10 @@ func main() {
 		// slog.NewLogLogger の第二引数に渡すことで、「このロガーが出力するログを Error レベルとして扱う」という意味になります。
 		ErrorLog:  slog.NewLogLogger(logger.Handler(), slog.LevelError),
 		TLSConfig: tlsConfig,
+		// keep-alive will be closed after 1 minute
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,git
 	}
 	app.logger.Info("starting server on", slog.String("port", *port))
 	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
