@@ -33,6 +33,7 @@ func main() {
 	flag.Parse()
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{AddSource: true}))
+
 	db, err := openDB(*dsn)
 	if err != nil {
 		logger.Error(err.Error(), slog.String("trace", string(debug.Stack())))
@@ -69,9 +70,13 @@ func main() {
 	srv := http.Server{
 		Addr:    ":" + *port,
 		Handler: app.routes(),
+		// http.ServerのErrorLogは*log.Logger
+		// しかし、logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{AddSource: true}))は*log/slog.logger
+		// slog.NewLogLogger の第二引数に渡すことで、「このロガーが出力するログを Error レベルとして扱う」という意味になります。
+		ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelError),
 	}
 	app.logger.Info("starting server on", slog.String("port", *port))
-	err = srv.ListenAndServe()
+	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
 	app.logger.Error(err.Error(), slog.String("trace", string(debug.Stack())))
 	os.Exit(1)
 }
