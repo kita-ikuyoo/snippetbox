@@ -6,6 +6,7 @@ import (
 	"flag"
 	"github.com/alexedwards/scs/v2"
 	"github.com/alexedwards/scs/v2/memstore"
+	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"html/template"
 	"log/slog"
@@ -20,6 +21,7 @@ type application struct {
 	snippets       *models.SnippetModel
 	templateCache  map[string]*template.Template
 	sessionManager *scs.SessionManager
+	formDecoder    *form.Decoder
 }
 
 func main() {
@@ -45,11 +47,14 @@ func main() {
 	sessionManager := scs.New()
 	sessionManager.Store = memstore.New()
 
+	formDecoder := form.NewDecoder()
+
 	app := &application{
 		logger:         logger,
 		snippets:       &models.SnippetModel{DB: db},
 		templateCache:  templateCache,
 		sessionManager: sessionManager,
+		formDecoder:    formDecoder,
 	}
 	gob.Register(snippetCreateForm{})
 	// http.Dir is FileSystem interface: Open(name string) (File, error)
