@@ -61,6 +61,7 @@ func main() {
 		templateCache:  templateCache,
 		sessionManager: sessionManager,
 		formDecoder:    formDecoder,
+		users:          &models.UserModel{DB: db},
 	}
 
 	tlsConfig := &tls.Config{
@@ -69,6 +70,7 @@ func main() {
 
 	gob.Register(snippetCreateForm{})
 	gob.Register(userSignupForm{})
+	gob.Register(userLoginForm{})
 	// http.Dir is FileSystem interface: Open(name string) (File, error)
 	// http.FileServer returns handler, a interface: ServeHTTP(ResponseWriter, *Request)
 	// log.Printf("%T\n", fileServer)

@@ -75,11 +75,10 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 	if err != nil {
 		// If we try to use an invalid target destination, the Decode() method
 		// will return an error with the type form.InvalidDecoderError. We use
-		// errors.AsType() to check for this and panic. At the end of this
-		// chapter we'll talk about panicking versus returning errors, and
-		// discuss why it's an appropriate thing to do in this specific situation.
+		// errors.AsType() to check for this and panic.
 
 		// 推論できないケース
+		// InvalidDecoderError means dst passed to Decode() is not a non-nil pointer
 		if _, ok := errors.AsType[*form.InvalidDecoderError](err); ok {
 			panic(err)
 		}
