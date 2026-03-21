@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: snippetbox_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: snippetbox
+      MYSQL_USER: web
+      MYSQL_PASSWORD: web
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      # 初期化用SQLスクリプトを自動実行させたい場合は以下をコメントアウトして使用します
+      # Mysql コンテナはrootユーザーを使って初期化スクリプトを実行します
+      - ./internal/models/sql/setup.sql:/docker-entrypoint-initdb.d/setup.sql
+    healthcheck:
+      # mysqladmin コマンドを使って、DBが応答するかを定期的にチェックする
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}" ]
+      interval: 5s     # 5秒ごとにチェック
+      timeout: 5s      # 5秒以内に返事がなければ失敗とみなす
+      retries: 10      # 10回連続で失敗したら「Unhealthy（異常）」とする
+      start_period: 20s # 起動直後の20秒間は、失敗してもカウントしない（初期化時間を考慮）
+  server:
+    image: miku0101/snippetbox
+    container_name: snippetbox_server
+    restart: on-failure
+    ports:
+      - "443:443"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      TZ: Asia/Tokyo
+    command: [
+      "./snippetbox",
+      "-port=443",
+      "-dsn=web:web@tcp(mysql:3306)/snippetbox?parseTime=true&loc=Asia%2FTokyo"
+    ]
+volumes:
+  db_data:
