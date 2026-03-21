@@ -1,0 +1,227 @@
+package main
+
+import (
+	"log"
+	"net/http"
+	"net/url"
+	"snippetbox.kita-ikuyoo.miku01/internal/assert"
+	"strings"
+	"testing"
+)
+
+func TestPing(t *testing.T) {
+	// Create a new instance of our application struct. For now, this just
+	// contains a structured logger (which uses the slog.DiscardHandler handler
+	// and will discard anything written to it with no action).
+	// Why do we need a logger here?
+	// The reason for this is that the logger is needed by the
+	// logRequest and recoverPanic middlewares, which are used by our application on every
+	// route. Trying to run this test without setting these two dependencies will result in a
+	// panic.
+	app := newTestApplication(t)
+	// We then use the httptest.NewTLSServer() function to create a new test
+	// server, passing in the value returned by our app.routes() method as the
+	// handler for the server. This starts up an HTTPS server which listens on a
+	// randomly-chosen port of your local machine for the duration of the test.
+	// Notice that we defer a call to ts.Close() so that the server is shut down
+	// when the test finishes.
+	ts := newTestServer(t, app.routes())
+	defer ts.Close()
+	// The network address that the test server is listening on is contained in
+	// the ts.URL field. We can use this to construct a new HTTP request for the
+	// GET /ping route.
+	res := ts.get(t, "/ping")
+	// We can then check the value of the response status code and body using
+	// the same pattern as before.
+	assert.Equal(t, res.status, http.StatusOK)
+	assert.Equal(t, res.body, "OK")
+}
+
+func TestSnippetView(t *testing.T) {
+	// Create a new instance of our application struct which uses the mocked
+	// dependencies.
+	app := newTestApplication(t)
+	// Establish a new test server for running end-to-end tests.
+	ts := newTestServer(t, app.routes())
+	defer ts.Close()
+	// Set up some table-driven tests to check the responses sent by our
+	// application for different URLs.
+	tests := []struct {
+		name       string
+		urlPath    string
+		wantStatus int
+		wantBody   string
+	}{
+		{
+			name:       "Valid ID",
+			urlPath:    "/snippet/view/1",
+			wantStatus: http.StatusOK,
+			// これはmock DBの値、mocks/snippetsにあります
+			wantBody: "An old silent pond...",
+		},
+		{
+			name:       "Non-existent ID",
+			urlPath:    "/snippet/view/2",
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name:       "Negative ID",
+			urlPath:    "/snippet/view/-1",
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name:       "Decimal ID",
+			urlPath:    "/snippet/view/1.23",
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name:       "String ID",
+			urlPath:    "/snippet/view/foo",
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name:       "Empty ID",
+			urlPath:    "/snippet/view/",
+			wantStatus: http.StatusNotFound,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Reset the test server client's cookie jar at the start of each
+			// sub-test, so that any cookies set in previous tests are removed
+			// and don't affect this test.
+			ts.resetClientCookieJar(t)
+			res := ts.get(t, tt.urlPath)
+			// Use assert.Equal() to check the response status, and the
+			// assert.True() function in conjunction with strings.Contains() to
+			// make sure that the response body contains the expected content.
+			assert.Equal(t, res.status, tt.wantStatus)
+			assert.True(t, strings.Contains(res.body, tt.wantBody))
+		})
+	}
+}
+
+func TestUserSignup(t *testing.T) {
+	app := newTestApplication(t)
+	ts := newTestServer(t, app.routes())
+	defer ts.Close()
+	const (
+		validName     = "Bob"
+		validPassword = "validPa$$word"
+		validEmail    = "bob@example.com"
+		formTag       = "<form action='/user/signup' method='POST' novalidate>"
+	)
+	tests := []struct {
+		name              string
+		userName          string
+		userEmail         string
+		userPassword      string
+		useValidCSRFToken bool
+		wantStatus        int
+		wantFormTag       string
+	}{
+		{
+			name:              "Valid submission",
+			userName:          validName,
+			userEmail:         validEmail,
+			userPassword:      validPassword,
+			useValidCSRFToken: true,
+			wantStatus:        http.StatusSeeOther,
+		},
+		{
+			name:              "Invalid CSRF Token",
+			userName:          validName,
+			userEmail:         validEmail,
+			userPassword:      validPassword,
+			useValidCSRFToken: false,
+			wantStatus:        http.StatusBadRequest,
+		},
+		{
+			name:              "Empty name",
+			userName:          "",
+			userEmail:         validEmail,
+			userPassword:      validPassword,
+			useValidCSRFToken: true,
+			wantStatus:        http.StatusSeeOther,
+			wantFormTag:       formTag,
+		},
+		{
+			name:              "Empty email",
+			userName:          validName,
+			userEmail:         "",
+			userPassword:      validPassword,
+			useValidCSRFToken: true,
+			wantStatus:        http.StatusSeeOther,
+			wantFormTag:       formTag,
+		},
+		{
+			name:              "Empty password",
+			userName:          validName,
+			userEmail:         validEmail,
+			userPassword:      "",
+			useValidCSRFToken: true,
+			wantStatus:        http.StatusSeeOther,
+			wantFormTag:       formTag,
+		},
+		{
+			name:              "Invalid email",
+			userName:          validName,
+			userEmail:         "bob@example.",
+			userPassword:      validPassword,
+			useValidCSRFToken: true,
+			wantStatus:        http.StatusSeeOther,
+			wantFormTag:       formTag,
+		},
+		{
+			name:              "Short password",
+			userName:          validName,
+			userEmail:         validEmail,
+			userPassword:      "pa$$",
+			useValidCSRFToken: true,
+			wantStatus:        http.StatusSeeOther,
+			wantFormTag:       formTag,
+		},
+		{
+			name:              "Duplicate email",
+			userName:          validName,
+			userEmail:         "dupe@example.com",
+			userPassword:      validPassword,
+			useValidCSRFToken: true,
+			wantStatus:        http.StatusUnprocessableEntity,
+			wantFormTag:       formTag,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Reset the cookie jar for each sub-test.
+			ts.resetClientCookieJar(t)
+			// Make a GET /user/signup signup request. This will automatically
+			// add the CSRF cookie from the response to the test client's cookie
+			// jar, and we can extract the CSRF token from the response body.
+			res := ts.get(t, "/user/signup")
+			// Build up the form values for the sub-test, including the CSRF
+			// token if appropriate.
+			form := url.Values{}
+			form.Add("name", tt.userName)
+			form.Add("email", tt.userEmail)
+			form.Add("password", tt.userPassword)
+			if tt.useValidCSRFToken {
+				form.Add("csrf_token", extractCSRFToken(t, res.body))
+			}
+			// Make the POST /user/signup request using the form values we
+			// created above. The request will automatically include the CSRF
+			// cookie from the test client's cookie jar.
+
+			res = ts.postForm(t, "/user/signup", form)
+			// And finally, test the response data.
+			assert.Equal(t, res.status, tt.wantStatus)
+			if tt.name == "Duplicate email" || tt.name == "Invalid CSRF Token" {
+				log.Print("here")
+				assert.True(t, strings.Contains(res.body, tt.wantFormTag))
+			} else {
+				assert.Equal(t, res.body, "")
+			}
+
+		})
+	}
+}

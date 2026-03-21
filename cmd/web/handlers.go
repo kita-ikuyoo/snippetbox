@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"snippetbox/internal/models"
-	"snippetbox/internal/validator"
+	"snippetbox.kita-ikuyoo.miku01/internal/models"
+	"snippetbox.kita-ikuyoo.miku01/internal/validator"
 	"strconv"
 )
 
@@ -122,6 +122,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+	//log.Print(form)
 	form.CheckField(validator.NotBlank(form.Name), "name", "This field cannot be blank")
 	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
 	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
@@ -130,6 +131,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	form.CheckField(validator.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
 
 	if !form.Valid() {
+		//log.Print("!form.Valid()")
 		app.sessionManager.Put(r.Context(), "form", form)
 		http.Redirect(w, r, "/user/signup", http.StatusSeeOther)
 		return
@@ -224,4 +226,8 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 	app.sessionManager.Put(r.Context(), "flash", "You've been logged out successfully!")
 	// Redirect the user to the application home page.
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func ping(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
 }

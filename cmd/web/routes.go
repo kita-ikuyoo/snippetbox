@@ -3,13 +3,16 @@ package main
 import (
 	"github.com/justinas/alice"
 	"net/http"
+	"snippetbox.kita-ikuyoo.miku01/ui"
 )
 
 // The routes() method returns a servemux containing our application routes.
 func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
-	fileServer := http.FileServer(http.Dir("./ui/static/"))
-	mux.Handle("GET /static/", neuter(http.StripPrefix("/static", fileServer)))
+	//fileServer := http.FileServer(http.Dir("./ui/static/"))
+	//mux.Handle("GET /static/", http.FileServerFS(ui.Files))
+	mux.Handle("GET /static/", neuter(http.FileServerFS(ui.Files)))
+	mux.HandleFunc("GET /ping", ping)
 	// Create a new middleware chain containing the middleware specific to our
 	// dynamic application routes. For now, this chain will only contain the
 	// LoadAndSave session middleware but we'll add more to it later.

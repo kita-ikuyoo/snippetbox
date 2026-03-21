@@ -15,17 +15,24 @@ import (
 	"net/http"
 	"os"
 	"runtime/debug"
-	"snippetbox/internal/models"
+	"snippetbox.kita-ikuyoo.miku01/internal/models"
 	"time"
 )
 
 type application struct {
 	logger         *slog.Logger
-	snippets       *models.SnippetModel
+	snippets       models.SnippetModelInterface
 	templateCache  map[string]*template.Template
 	sessionManager *scs.SessionManager
 	formDecoder    *form.Decoder
-	users          *models.UserModel
+	users          models.UserModelInterface
+}
+
+func init() {
+	gob.Register(snippetCreateForm{})
+	gob.Register(userSignupForm{})
+	gob.Register(userLoginForm{})
+
 }
 
 func main() {
@@ -68,9 +75,6 @@ func main() {
 		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
 	}
 
-	gob.Register(snippetCreateForm{})
-	gob.Register(userSignupForm{})
-	gob.Register(userLoginForm{})
 	// http.Dir is FileSystem interface: Open(name string) (File, error)
 	// http.FileServer returns handler, a interface: ServeHTTP(ResponseWriter, *Request)
 	// log.Printf("%T\n", fileServer)
