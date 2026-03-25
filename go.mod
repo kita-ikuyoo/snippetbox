@@ -1,6 +1,6 @@
 module snippetbox.kita-ikuyoo.miku01
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/alexedwards/scs/mysqlstore v0.0.0-20251002162104-209de6e426de
