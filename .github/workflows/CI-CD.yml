@@ -50,6 +50,6 @@ jobs:
         with:
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/snippetbox:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/snippetbox:${{ github.sha }}
+            ${{ vars.DOCKERHUB_USERNAME }}/snippetbox:latest
+            ${{ vars.DOCKERHUB_USERNAME }}/snippetbox:${{ github.sha }}
           
