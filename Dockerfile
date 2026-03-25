@@ -20,6 +20,10 @@ ARG TARGETARCH
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o snippetbox ./cmd/web
 
 RUN go run /usr/local/go/src/crypto/tls/generate_cert.go --rsa-bits=2048 --host=localhost
+
+RUN mkdir tls
+
+RUN mv cert.pem key.pem tls
 # ==========================================
 # Stage 2: 実行環境 (Runner)
 # ==========================================
