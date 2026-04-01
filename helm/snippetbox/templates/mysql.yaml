@@ -1,3 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-initdb
+data:
+  schema.sql: |
+    CREATE TABLE sessions (
+    token CHAR(43) COLLATE utf8mb4_bin PRIMARY KEY,
+    data BLOB NOT NULL,
+    expiry TIMESTAMP(6) NOT NULL
+    );
+
+    CREATE INDEX sessions_expiry_idx ON sessions (expiry);
+
+    CREATE TABLE snippets (
+    id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(100) NOT NULL,
+    content TEXT NOT NULL,
+    created DATETIME NOT NULL,
+    expires DATETIME NOT NULL
+    );
+    CREATE INDEX idx_snippets_created ON snippets(created);
+    CREATE TABLE users (
+    id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    hashed_password CHAR(60) NOT NULL,
+    created DATETIME NOT NULL
+    );
+    ALTER TABLE users ADD CONSTRAINT users_uc_email UNIQUE (email);
+    INSERT INTO users (name, email, hashed_password, created) VALUES (
+    'Alice Jones',
+    'alice@example.com',
+    '$2a$12$NuTjWXm3KKntReFwyBVHyuf/to.HEwTy.eS206TNfkGfr6HzGJSWG',
+    '2022-01-01 09:18:24'
+    );
+---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -41,9 +79,15 @@ spec:
           volumeMounts:
             - name: mysql-data
               mountPath: /var/lib/mysql
+            - name: initdb
+              mountPath: /docker-entrypoint-initdb.d
       volumes:
         - name: mysql-data
-          emptyDir: {}  # 開発用。本番はPersistentVolumeを使う
+          emptyDir: {}
+        - name: initdb
+          configMap:
+            name: mysql-initdb
+
 ---
 apiVersion: v1
 kind: Service

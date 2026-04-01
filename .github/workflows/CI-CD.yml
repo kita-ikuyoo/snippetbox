@@ -100,8 +100,20 @@ jobs:
             --name ${{ vars.EKS_CLUSTER_NAME }} \
             --region ap-northeast-1
 
-      # 🚀 Deploy with Helm
-      - name: Deploy
+
+      - name: Deploy mysql
+        run: |
+          helm upgrade --install mysql oci://registry-1.docker.io/bitnamicharts/mysql \
+            --set auth.rootPassword=${{ secrets.MYSQL_ROOT_PASSWORD }} \
+            --set auth.database=${{ secrets.MYSQL_DATABASE }} \
+            --set auth.username=${{ secrets.MYSQL_USER }} \
+            --set auth.password=${{ secrets.MYSQL_PASSWORD }} \
+            --set-file initdbScripts.schema\.sql=./schema.sql \
+            --wait
+
+      
+
+      - name: Deploy snippetbox
         run: |
           helm upgrade --install snippetbox ./helm/snippetbox \
             --set image.tag=${{ github.sha }}
