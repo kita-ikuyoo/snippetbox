@@ -129,12 +129,16 @@ resources: {}
 livenessProbe:
   httpGet:
     path: /
-    port: http
+    port: 443
+    scheme: HTTPS
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  failureThreshold: 3
 readinessProbe:
   httpGet:
     path: /
     port: 443
-    scheme: https
+    scheme: HTTPS
   initialDelaySeconds: 5
   periodSeconds: 10
   failureThreshold: 3
