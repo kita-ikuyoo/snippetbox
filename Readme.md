@@ -13,8 +13,6 @@ docker-compose up
 
 Alex Edwards著「Let's Go」を完走して構築した、スニペット共有WebアプリのGoによる実装です。
 
-🔗 [ライブデモ](https://your-app-url.com) ← あれば
-
 ---
 
 ## 技術スタック
@@ -28,6 +26,7 @@ Alex Edwards著「Let's Go」を完走して構築した、スニペット共有
 | 認証     | セッション管理 + bcrypt     |
 | テスト    | testing（標準ライブラリ）     |
 | 実行環境   | docker               |
+| インフラ   | Terraform, AWS       |
 
 
 ---
@@ -42,6 +41,7 @@ Alex Edwards著「Let's Go」を完走して構築した、スニペット共有
 - CSRFトークンによるセキュリティ対策
 - ミドルウェアチェーンによるリクエスト処理
 - テーブル駆動テスト・統合テスト
+- TerraformとAWSによりインフラ管理の自動化
 
 ---
 
@@ -52,29 +52,16 @@ Alex Edwards著「Let's Go」を完走して構築した、スニペット共有
 - **安全性設計**: SSL/TLSとCSRFトークンによる安全性対策
 - **エラーハンドリング**: 集中管理により各ハンドラをシンプルに保った
 - **テスト**: `httptest` を使ったエンドツーエンドテストを実装
+- **インフラ**: Terraformを使ったAWS環境管理
+- **CI|CD**: Github ActionsによるCI|CDパイプラインの構築
 
----
-
-## セットアップ
-```bash
-git clone https://github.com/[yourname]/snippetbox
-cd snippetbox
-
-# DBの準備
-mysql -u root < db/setup.sql
-
-# 環境変数
-export DSN="web:pass@/snippetbox?parseTime=true"
-
-# 起動
-go run ./cmd/web
-# → http://localhost:4000
-```
 
 ---
 
 ## 学んだこと
 
-本書を通じて、GoのHTTPサーバーの仕組みをフレームワーク無しで理解しました。
+このプロジェクトを通じて、GoのHTTPサーバーの仕組みをフレームワーク無しで理解しました。
 特にミドルウェアの実装原理、テンプレートキャッシュ、セッション管理の設計を
 自分の手で組み上げたことで、Goらしい設計思想を体感できました。
+そして、Github ActionsによってCI|CDパイプラインを構築し
+TerraformによってインフラであるAWSを管理し、Terraformの

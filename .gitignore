@@ -1,3 +1,4 @@
 tls/
 .DS_Store
 .claude
+./terraform/backend.hcl
