@@ -17,16 +17,17 @@ Alex Edwards著「Let's Go」を完走して構築した、スニペット共有
 
 ## 技術スタック
 
-| カテゴリ   | 技術                   |
-|--------|----------------------|
-| 言語     | Go 1.22              |
-| Web    | net/http（標準ライブラリ）    |
-| DB     | MySQL + database/sql |
-| テンプレート | html/template        |
-| 認証     | セッション管理 + bcrypt     |
-| テスト    | testing（標準ライブラリ）     |
-| 実行環境   | docker               |
-| インフラ   | Terraform, AWS       |
+| カテゴリ    | 技術                   |
+|---------|----------------------|
+| 言語      | Go 1.22              |
+| Web     | net/http（標準ライブラリ）    |
+| DB      | MySQL + database/sql |
+| テンプレート  | html/template        |
+| 認証      | セッション管理 + bcrypt     |
+| テスト     | testing（標準ライブラリ）     |
+| 実行環境    | docker               |
+| インフラ    | Terraform, AWS EKS   |
+| デプロイメント | Helm                 |
 
 
 ---
@@ -41,7 +42,7 @@ Alex Edwards著「Let's Go」を完走して構築した、スニペット共有
 - CSRFトークンによるセキュリティ対策
 - ミドルウェアチェーンによるリクエスト処理
 - テーブル駆動テスト・統合テスト
-- TerraformとAWSによりインフラ管理の自動化
+- TerraformによりAWSインフラ管理の自動化
 
 ---
 
