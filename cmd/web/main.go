@@ -39,10 +39,10 @@ func init() {
 func main() {
 	port := flag.String("port", "443", "HTTP network port")
 	// parseTime=true tells the driver to convert time type to golang's time.Time
-	dbHost := os.Getenv("DB_HOST")
-	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbDatabase := os.Getenv("DB_DATABASE")
+	dbHost := os.Getenv("MYSQL_HOST")
+	dbUser := os.Getenv("MYSQL_USER")
+	dbPassword := os.Getenv("MYSQL_PASSWORD")
+	dbDatabase := os.Getenv("MYSQL_DATABASE")
 	dsn := flag.String("dsn", fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?parseTime=true&loc=Asia%%2FTokyo", dbUser, dbPassword, dbHost, dbDatabase), "MySQL data source name")
 	flag.Parse()
 
