@@ -42,8 +42,8 @@ func main() {
 	dbHost := os.Getenv("DB_HOST")
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
-	dbName := os.Getenv("DB_NAME")
-	dsn := flag.String("dsn", fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?parseTime=true&loc=Asia%2FTokyo", dbUser, dbPassword, dbHost, dbName), "MySQL data source name")
+	dbDatabase := os.Getenv("DB_DATABASE")
+	dsn := flag.String("dsn", fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?parseTime=true&loc=Asia%2FTokyo", dbUser, dbPassword, dbHost, dbDatabase), "MySQL data source name")
 	flag.Parse()
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{AddSource: true}))
