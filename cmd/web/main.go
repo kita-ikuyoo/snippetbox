@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/gob"
 	"flag"
+	"fmt"
 	"github.com/alexedwards/scs/v2"
 
 	"github.com/alexedwards/scs/mysqlstore"
@@ -38,7 +39,11 @@ func init() {
 func main() {
 	port := flag.String("port", "443", "HTTP network port")
 	// parseTime=true tells the driver to convert time type to golang's time.Time
-	dsn := flag.String("dsn", "web:web@/snippetbox?parseTime=true&loc=Asia%2FTokyo", "MySQL data source name")
+	dbHost := os.Getenv("DB_HOST")
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
+	dsn := flag.String("dsn", fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?parseTime=true&loc=Asia%2FTokyo", dbUser, dbPassword, dbHost, dbName), "MySQL data source name")
 	flag.Parse()
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{AddSource: true}))

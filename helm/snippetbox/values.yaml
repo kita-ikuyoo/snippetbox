@@ -169,9 +169,3 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
-
-env:
-  DB_HOST: mysql
-  DB_USER: web
-  DB_PASSWORD: web
-  DB_NAME: snippetbox
