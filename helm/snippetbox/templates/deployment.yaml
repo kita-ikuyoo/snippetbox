@@ -68,7 +68,10 @@ spec:
             - name: DB_NAME
               value: "{{ .Values.env.DB_NAME }}"
             - name: DB_PASSWORD
-              value: "web"
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_PASSWORD
       {{- with .Values.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}
