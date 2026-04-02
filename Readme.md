@@ -1,5 +1,8 @@
 # Snippetbox - A web application for saving and sharing text snippets built with Go
 
+## Teffaform Code for Infra
+https://github.com/kita-ikuyoo/snippetbox-infra
+
 ## How to use
 ```bash
 docker-compose up
@@ -43,6 +46,7 @@ Alex Edwards著「Let's Go」を完走して構築した、スニペット共有
 - ミドルウェアチェーンによるリクエスト処理
 - テーブル駆動テスト・統合テスト
 - TerraformによりAWSインフラ管理の自動化
+- EKSにアプリをデプロイメント
 
 ---
 
@@ -55,6 +59,7 @@ Alex Edwards著「Let's Go」を完走して構築した、スニペット共有
 - **テスト**: `httptest` を使ったエンドツーエンドテストを実装
 - **インフラ**: Terraformを使ったAWS環境管理
 - **CI|CD**: Github ActionsによるCI|CDパイプラインの構築
+- **デプロイ**: Helmによりアプリのデプロイメント
 
 
 ---
