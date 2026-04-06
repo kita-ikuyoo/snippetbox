@@ -5,9 +5,9 @@ name: Go
 
 on:
   push:
-    branches: [ "withou-multibuild" ]
+    branches: [ "without-multibuild" ]
   pull_request:
-    branches: [ "withou-multibuild" ]
+    branches: [ "without-multibuild" ]
 
 jobs:
   build-and-push:
